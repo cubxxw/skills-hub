@@ -1,0 +1,56 @@
+{
+  "name": "AG-UI Skill Platform",
+  "version": "0.1.0",
+  "description": "在线 OpenClaw Skills 管理系统，支持上传、配置、封装、验证，Web 端远程控制本地 OpenClaw",
+  "core_features": [
+    {
+      "id": "skill-upload",
+      "name": "Skills 上传",
+      "description": "支持 ZIP 上传、Git 导入、在线编辑创建 skills",
+      "priority": "P0"
+    },
+    {
+      "id": "skill-config",
+      "name": "配置管理",
+      "description": "可视化配置 skills 的环境变量、API Keys、权限",
+      "priority": "P0"
+    },
+    {
+      "id": "skill-package",
+      "name": "封装发布",
+      "description": "自动验证 SKILL.md 格式，打包发布到 ClawHub",
+      "priority": "P1"
+    },
+    {
+      "id": "skill-validate",
+      "name": "AI 验证",
+      "description": "使用 Qwen/Claude 自动验证 skills 功能、安全性",
+      "priority": "P0"
+    },
+    {
+      "id": "web-control",
+      "name": "Web 远程控制",
+      "description": "通过 AG-UI 协议 Web 端控制本地 OpenClaw",
+      "priority": "P0"
+    },
+    {
+      "id": "deep-think",
+      "name": "深度思考设计",
+      "description": "集成深度思考模型分析 skill 架构、优化建议",
+      "priority": "P1"
+    }
+  ],
+  "tech_stack": {
+    "frontend": "React + AG-UI Protocol",
+    "backend": "Node.js + OpenClaw Gateway API",
+    "ai": "Qwen Code CLI + Ralph Loop",
+    "validation": "AI-powered testing + security audit"
+  },
+  "acceptance_criteria": [
+    "用户可以上传 ZIP 文件自动解析为 skill",
+    "可视化配置界面管理环境变量和权限",
+    "AI 自动验证 skill 功能并生成测试报告",
+    "Web 端可以触发本地 OpenClaw 执行 skills",
+    "支持 skill 版本管理和回滚"
+  ]
+}

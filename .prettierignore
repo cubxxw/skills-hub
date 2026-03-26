@@ -1,0 +1,24 @@
+# Ignore artifacts:
+dist
+build
+node_modules
+
+# Ignore all test files:
+*.test.*
+*.spec.*
+
+# Ignore all declaration files:
+*.d.ts
+
+# Ignore misc files:
+*.log
+*.lock
+*.md
+
+# Ignore environment files:
+.env*
+.vimrc
+
+# Ignore IDE files:
+.idea
+.vscode
