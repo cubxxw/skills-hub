@@ -163,7 +163,7 @@ app.get('/', (_req, res) => {
     endpoints: {
       health: '/api/health',
       skills: '/api/skills',
-      websocket: `/ws (port ${WS_PORT})`,
+      websocket: `/ws (port ${PORT})`,
     },
   })
 })
