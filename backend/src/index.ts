@@ -67,7 +67,6 @@ import {
 } from './routes/release.js'
 
 const PORT = process.env.PORT || 4000
-const WS_PORT = process.env.WS_PORT || 5000
 const GATEWAY_URL = process.env.GATEWAY_URL || 'ws://127.0.0.1:18789'
 
 const app: Express = express()
@@ -124,11 +123,8 @@ const eventHandler = new AGUIEventHandler({
   },
 })
 
-// Initialize WebSocket server
-const wsServer = new WSServer(
-  { port: parseInt(WS_PORT as string, 10) },
-  eventHandler
-)
+// Initialize WebSocket server (will attach to httpServer on port 4000)
+const wsServer = new WSServer({}, eventHandler)
 
 // Initialize log stream handler
 const logStreamHandler = getLogStreamHandler()
@@ -327,11 +323,11 @@ httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`)
   console.log(`📝 API Health: http://localhost:${PORT}/api/health`)
   console.log(`📚 Skills List: http://localhost:${PORT}/api/skills`)
-  console.log(`🔌 WebSocket: ws://localhost:${WS_PORT}/ws`)
+  console.log(`🔌 WebSocket: ws://localhost:${PORT}/ws`)
   console.log(`📋 Log Stream: ws://localhost:${PORT}/ws/logs`)
 
-  // Start standalone WebSocket server on port 5000
-  wsServer.start(parseInt(WS_PORT as string, 10))
+  // Attach WebSocket server to HTTP server (single port architecture)
+  wsServer.attach(httpServer)
 
   // Setup log stream WebSocket handler
   httpServer.on('upgrade', (request, socket, head) => {
@@ -342,7 +338,7 @@ httpServer.listen(PORT, () => {
         logStreamHandler.handleConnection(ws, request)
       })
     }
-    // Main WS server handles other /ws paths
+    // Main WS server handles /ws path
     else if (url === '/ws') {
       wsServer.server?.handleUpgrade(request, socket, head, (ws) => {
         wsServer.server?.emit('connection', ws, request)

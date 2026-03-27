@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from 'express'
+import { skillsStore } from '../storage/skills-store.js'
 
 export interface SkillInfo {
   id: string
@@ -25,72 +26,75 @@ export interface SkillsListResponse {
   timestamp: string
 }
 
-// Mock skills data (will be replaced with actual file system / database)
-const mockSkills: SkillInfo[] = [
-  {
-    id: 'skill-001',
-    name: 'web-search',
-    description: 'Search the web for information',
-    version: '1.0.0',
-    author: 'OpenClaw Team',
-    tags: ['search', 'web', 'information'],
-    enabled: true,
-    status: 'active',
-    createdAt: '2024-01-15T10:00:00.000Z',
-    updatedAt: '2024-01-15T10:00:00.000Z',
-  },
-  {
-    id: 'skill-002',
-    name: 'code-executor',
-    description: 'Execute code snippets in sandboxed environment',
-    version: '0.9.5',
-    author: 'OpenClaw Team',
-    tags: ['code', 'execution', 'sandbox'],
-    enabled: true,
-    status: 'active',
-    createdAt: '2024-01-10T08:30:00.000Z',
-    updatedAt: '2024-01-12T14:20:00.000Z',
-  },
-  {
-    id: 'skill-003',
-    name: 'file-manager',
-    description: 'Manage files and directories',
-    version: '1.1.0',
-    author: 'OpenClaw Team',
-    tags: ['files', 'management', 'filesystem'],
-    enabled: true,
-    status: 'active',
-    createdAt: '2024-01-05T12:00:00.000Z',
-    updatedAt: '2024-01-08T09:15:00.000Z',
-  },
-]
+/**
+ * Convert StoredSkill to SkillInfo for API response
+ */
+function toSkillInfo(skill: {
+  id: string
+  name: string
+  description: string
+  version: string
+  author?: string
+  tags?: string[]
+  enabled: boolean
+  status: string
+  createdAt: string
+  updatedAt: string
+  path?: string
+}): SkillInfo {
+  return {
+    id: skill.id,
+    name: skill.name,
+    description: skill.description,
+    version: skill.version,
+    author: skill.author,
+    tags: skill.tags || [],
+    enabled: skill.enabled,
+    status: skill.status as 'active' | 'inactive' | 'error',
+    createdAt: skill.createdAt,
+    updatedAt: skill.updatedAt,
+    path: skill.path,
+  }
+}
 
 /**
  * GET /api/skills
- * Returns list of all available skills
+ * Returns list of all available skills from storage
  */
 export function getSkills(_req: Request, res: Response<SkillsListResponse>): void {
-  res.json({
-    skills: mockSkills,
-    total: mockSkills.length,
-    timestamp: new Date().toISOString(),
-  })
+  try {
+    const storedSkills = skillsStore.getAllSkills()
+    const skills = storedSkills.map(toSkillInfo)
+    
+    res.json({
+      skills,
+      total: skills.length,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('❌ Failed to get skills:', error)
+    res.json({
+      skills: [],
+      total: 0,
+      timestamp: new Date().toISOString(),
+    })
+  }
 }
 
 /**
  * GET /api/skills/:id
- * Returns details of a specific skill
+ * Returns details of a specific skill from storage
  */
 export function getSkillById(req: Request, res: Response<SkillInfo | { error: string }>): void {
   const { id } = req.params
-  const skill = mockSkills.find((s) => s.id === id)
+  const skill = skillsStore.getSkillById(id)
 
   if (!skill) {
     res.status(404).json({ error: `Skill with id '${id}' not found` })
     return
   }
 
-  res.json(skill)
+  res.json(toSkillInfo(skill))
 }
 
 /**
@@ -99,7 +103,7 @@ export function getSkillById(req: Request, res: Response<SkillInfo | { error: st
  */
 export function getSkillStatus(req: Request, res: Response<{ status: string; skillId: string; timestamp: string } | { error: string }>): void {
   const { id } = req.params
-  const skill = mockSkills.find((s) => s.id === id)
+  const skill = skillsStore.getSkillById(id)
 
   if (!skill) {
     res.status(404).json({ error: `Skill with id '${id}' not found` })

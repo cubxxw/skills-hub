@@ -31,7 +31,8 @@ interface AGUIContextValue {
 
 const AGUIContext = createContext<AGUIContextValue | null>(null);
 
-const WS_URL = 'ws://8.220.240.187:5000/ws';
+// Use relative URLs - Vite proxy will forward to backend
+const WS_URL = `ws://${typeof window !== 'undefined' ? window.location.host : 'localhost:3000'}/ws`;
 const MAX_LOGS = 500;
 
 interface AGUIProviderProps {
@@ -50,10 +51,10 @@ export function AGUIProvider({ children, wsUrl = WS_URL }: AGUIProviderProps): J
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
   useEffect(() => {
-    // Load skills from HTTP API immediately
+    // Load skills from HTTP API immediately (using relative path - Vite proxy will forward)
     async function loadSkills() {
       try {
-        const response = await fetch('http://8.220.240.187:4000/api/skills');
+        const response = await fetch('/api/skills');
         const data = await response.json();
         if (data.skills) {
           // Transform backend format to frontend format
