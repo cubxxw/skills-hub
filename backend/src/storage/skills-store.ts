@@ -16,6 +16,8 @@ export interface StoredSkill {
   description: string
   version: string
   author?: string
+  tags?: string[]
+  enabled: boolean
   status: 'active' | 'inactive' | 'error' | 'validating'
   createdAt: string
   updatedAt: string
@@ -156,6 +158,8 @@ export class SkillsStore {
         description,
         version,
         author: metadata.author,
+        tags: metadata.keywords || [],
+        enabled: validationScore >= 0.8,
         status: validationScore >= 0.8 ? 'active' : 'inactive',
         createdAt: now,
         updatedAt: now,

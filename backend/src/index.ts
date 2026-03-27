@@ -67,7 +67,7 @@ import {
 } from './routes/release.js'
 
 const PORT = process.env.PORT || 4000
-const WS_PORT = process.env.WS_PORT || 4001
+const WS_PORT = process.env.WS_PORT || 5000
 const GATEWAY_URL = process.env.GATEWAY_URL || 'ws://127.0.0.1:18789'
 
 const app: Express = express()
@@ -154,15 +154,6 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction): void =>
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
-    timestamp: new Date().toISOString(),
-  })
-})
-
-// 404 handler
-app.use((_req: Request, res: Response): void => {
-  res.status(404).json({
-    error: 'Not found',
-    path: _req.path,
     timestamp: new Date().toISOString(),
   })
 })
@@ -339,8 +330,8 @@ httpServer.listen(PORT, () => {
   console.log(`🔌 WebSocket: ws://localhost:${WS_PORT}/ws`)
   console.log(`📋 Log Stream: ws://localhost:${PORT}/ws/logs`)
 
-  // Attach WebSocket server to HTTP server
-  wsServer.attach(httpServer)
+  // Start standalone WebSocket server on port 5000
+  wsServer.start(parseInt(WS_PORT as string, 10))
 
   // Setup log stream WebSocket handler
   httpServer.on('upgrade', (request, socket, head) => {
@@ -381,6 +372,15 @@ process.on('SIGINT', () => {
   httpServer.close(() => {
     console.log('✅ HTTP server closed')
     process.exit(0)
+  })
+})
+
+// 404 handler - MUST be last after all routes
+app.use((_req: Request, res: Response): void => {
+  res.status(404).json({
+    error: 'Not found',
+    path: _req.path,
+    timestamp: new Date().toISOString(),
   })
 })
 

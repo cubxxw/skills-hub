@@ -11,6 +11,8 @@ export interface SkillInfo {
   description: string
   version: string
   author?: string
+  tags?: string[]
+  enabled: boolean
   status: 'active' | 'inactive' | 'error'
   createdAt: string
   updatedAt: string
@@ -31,6 +33,8 @@ const mockSkills: SkillInfo[] = [
     description: 'Search the web for information',
     version: '1.0.0',
     author: 'OpenClaw Team',
+    tags: ['search', 'web', 'information'],
+    enabled: true,
     status: 'active',
     createdAt: '2024-01-15T10:00:00.000Z',
     updatedAt: '2024-01-15T10:00:00.000Z',
@@ -41,6 +45,8 @@ const mockSkills: SkillInfo[] = [
     description: 'Execute code snippets in sandboxed environment',
     version: '0.9.5',
     author: 'OpenClaw Team',
+    tags: ['code', 'execution', 'sandbox'],
+    enabled: true,
     status: 'active',
     createdAt: '2024-01-10T08:30:00.000Z',
     updatedAt: '2024-01-12T14:20:00.000Z',
@@ -51,6 +57,8 @@ const mockSkills: SkillInfo[] = [
     description: 'Manage files and directories',
     version: '1.1.0',
     author: 'OpenClaw Team',
+    tags: ['files', 'management', 'filesystem'],
+    enabled: true,
     status: 'active',
     createdAt: '2024-01-05T12:00:00.000Z',
     updatedAt: '2024-01-08T09:15:00.000Z',

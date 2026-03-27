@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { createAGUIClient, AGUIClient } from '../lib/ag-ui-client';
 import type {
   Skill,
+  SkillParameter,
   AgentState,
   LogEntry,
   ConnectionState,
@@ -30,7 +31,7 @@ interface AGUIContextValue {
 
 const AGUIContext = createContext<AGUIContextValue | null>(null);
 
-const WS_URL = 'ws://localhost:4000/ag-ui';
+const WS_URL = 'ws://8.220.240.187:5000/ws';
 const MAX_LOGS = 500;
 
 interface AGUIProviderProps {
@@ -48,7 +49,45 @@ export function AGUIProvider({ children, wsUrl = WS_URL }: AGUIProviderProps): J
   const [currentAgentState, setCurrentAgentState] = useState<AgentState>('idle');
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
-  useEffect((): (() => void) => {
+  useEffect(() => {
+    // Load skills from HTTP API immediately
+    async function loadSkills() {
+      try {
+        const response = await fetch('http://8.220.240.187:4000/api/skills');
+        const data = await response.json();
+        if (data.skills) {
+          // Transform backend format to frontend format
+          // Handles both old format (status only) and new format (enabled + tags)
+          const transformedSkills: Skill[] = data.skills.map((skill: {
+            id: string;
+            name: string;
+            description: string;
+            version: string;
+            author?: string;
+            tags?: string[];
+            enabled?: boolean;
+            status?: 'active' | 'inactive' | 'error';
+            createdAt: string;
+            updatedAt: string;
+            parameters?: SkillParameter[];
+          }) => ({
+            id: skill.id,
+            name: skill.name,
+            description: skill.description,
+            version: skill.version,
+            author: skill.author,
+            tags: skill.tags || [],
+            parameters: skill.parameters || [],
+            enabled: skill.enabled ?? (skill.status === 'active'),
+          }));
+          setSkills(transformedSkills);
+        }
+      } catch (error) {
+        console.error('Failed to load skills:', error);
+      }
+    }
+    loadSkills();
+
     const aguiClient = createAGUIClient(
       {
         url: wsUrl,

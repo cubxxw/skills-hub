@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统诊断</title>
+    <style>
+        body { font-family: Arial; background: #1a1a2e; color: white; padding: 20px; }
+        .card { background: #2d2d44; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .ok { background: #22c55e; }
+        .error { background: #ef4444; }
+        .warn { background: #f59e0b; }
+        pre { background: #000; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #5568d3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 AG-UI Skill Platform 诊断</h1>
+    
+    <div class="card">
+        <h2>服务状态</h2>
+        <div id="api-status" class="status">检查中...</div>
+        <div id="ws-status" class="status">检查中...</div>
+        <div id="skills-status" class="status">检查中...</div>
+    </div>
+
+    <div class="card">
+        <h2>API 响应</h2>
+        <pre id="api-response">等待检查...</pre>
+    </div>
+
+    <div class="card">
+        <h2>WebSocket 测试</h2>
+        <button onclick="testWS()">测试 WebSocket</button>
+        <pre id="ws-log">等待测试...</pre>
+    </div>
+
+    <div class="card">
+        <h2>操作</h2>
+        <button onclick="location.reload()">🔄 刷新页面</button>
+        <button onclick="clearCache()">🗑️ 清除缓存</button>
+        <button onclick="window.open('http://8.220.240.187:3000/', '_blank')">🚀 访问主页面</button>
+    </div>
+
+    <script>
+        async function checkAll() {
+            // 检查 API
+            try {
+                const res = await fetch('http://8.220.240.187:4000/api/health');
+                const data = await res.json();
+                document.getElementById('api-status').className = 'status ok';
+                document.getElementById('api-status').textContent = '✅ API 正常：' + data.message;
+                document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                document.getElementById('api-status').className = 'status error';
+                document.getElementById('api-status').textContent = '❌ API 失败：' + e.message;
+            }
+
+            // 检查 Skills
+            try {
+                const res = await fetch('http://8.220.240.187:4000/api/skills');
+                const data = await res.json();
+                const count = data.total || data.skills?.length || 0;
+                document.getElementById('skills-status').className = count > 0 ? 'status ok' : 'status warn';
+                document.getElementById('skills-status').textContent = count > 0 
+                    ? `✅ 技能数量：${count}` 
+                    : '⚠️ 技能数量为 0';
+            } catch (e) {
+                document.getElementById('skills-status').className = 'status error';
+                document.getElementById('skills-status').textContent = '❌ Skills 失败：' + e.message;
+            }
+
+            // WebSocket 测试
+            testWS();
+        }
+
+        function testWS() {
+            const wsUrl = 'ws://8.220.240.187:5000/ws';
+            const log = document.getElementById('ws-log');
+            log.textContent = `尝试连接：${wsUrl}\n`;
+
+            const ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                document.getElementById('ws-status').className = 'status ok';
+                document.getElementById('ws-status').textContent = '✅ WebSocket 已连接';
+                log.textContent += '✅ 连接成功！\n';
+                ws.send(JSON.stringify({type: 'test'}));
+            };
+
+            ws.onclose = () => {
+                document.getElementById('ws-status').className = 'status error';
+                document.getElementById('ws-status').textContent = '❌ WebSocket 已断开';
+                log.textContent += '❌ 连接关闭\n';
+            };
+
+            ws.onerror = (e) => {
+                document.getElementById('ws-status').className = 'status error';
+                document.getElementById('ws-status').textContent = '❌ WebSocket 错误';
+                log.textContent += '❌ 错误：' + JSON.stringify(e) + '\n';
+            };
+
+            ws.onmessage = (e) => {
+                log.textContent += '📨 收到：' + e.data + '\n';
+            };
+
+            setTimeout(() => ws.close(), 3000);
+        }
+
+        function clearCache() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('缓存已清除！页面将刷新。');
+            location.reload();
+        }
+
+        checkAll();
+    </script>
+</body>
+</html>

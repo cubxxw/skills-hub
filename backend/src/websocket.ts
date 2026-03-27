@@ -65,12 +65,13 @@ export class WSServer {
   start(port: number): void {
     this.wss = new WebSocketServer({
       port,
+      host: '0.0.0.0',
       path: '/ws',
     })
     this.setupWebSocketHandlers()
     this.startHeartbeat()
 
-    console.log(`🔌 WebSocket server running on ws://localhost:${port}/ws`)
+    console.log(`🔌 WebSocket server running on ws://0.0.0.0:${port}/ws`)
   }
 
   /**

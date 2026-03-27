@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG-UI Skill Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .status-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-label { font-weight: 600; color: #555; }
+        .status-value { 
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .status-ok { background: #22c55e; color: white; }
+        .status-error { background: #ef4444; color: white; }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .skill-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .skill-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .skill-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .skill-version {
+            background: #667eea;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        .skill-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .skill-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .skill-author {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .skill-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-active { background: #22c55e; color: white; }
+        .status-inactive { background: #999; color: white; }
+        .run-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .run-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .run-btn:active {
+            transform: translateY(0);
+        }
+        .run-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            padding: 50px;
+        }
+        .error-msg {
+            background: #ef4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 AG-UI Skill Platform</h1>
+            <p>OpenClaw Skills 管理系统</p>
+        </header>
+
+        <div id="error-container"></div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">📡 API 状态</span>
+                <span class="status-value" id="api-status">检查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">🔌 WebSocket 状态</span>
+                <span class="status-value" id="ws-status">检查中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">📦 技能数量</span>
+                <span class="status-value" id="skill-count">0</span>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px;">加载技能列表中...</p>
+        </div>
+
+        <div id="skills-container" class="skills-grid"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://8.220.240.187:4000';
+        const WS_URL = 'ws://8.220.240.187:5000/ws';
+        
+        // 检查 API 状态
+        async function checkAPI() {
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                document.getElementById('api-status').className = 'status-value status-ok';
+                document.getElementById('api-status').textContent = '✅ 正常';
+                return true;
+            } catch (error) {
+                document.getElementById('api-status').className = 'status-value status-error';
+                document.getElementById('api-status').textContent = '❌ 失败';
+                showError('API 连接失败：' + error.message);
+                return false;
+            }
+        }
+
+        // 检查 WebSocket 状态
+        function checkWebSocket() {
+            return new Promise((resolve) => {
+                const ws = new WebSocket(WS_URL);
+                const timeout = setTimeout(() => {
+                    ws.close();
+                    document.getElementById('ws-status').className = 'status-value status-error';
+                    document.getElementById('ws-status').textContent = '❌ 超时';
+                    resolve(false);
+                }, 5000);
+
+                ws.onopen = () => {
+                    clearTimeout(timeout);
+                    document.getElementById('ws-status').className = 'status-value status-ok';
+                    document.getElementById('ws-status').textContent = '✅ 已连接';
+                    ws.close();
+                    resolve(true);
+                };
+
+                ws.onerror = () => {
+                    clearTimeout(timeout);
+                    document.getElementById('ws-status').className = 'status-value status-error';
+                    document.getElementById('ws-status').textContent = '❌ 失败';
+                    resolve(false);
+                };
+            });
+        }
+
+        // 加载技能列表
+        async function loadSkills() {
+            try {
+                const response = await fetch(`${API_URL}/api/skills`);
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('skill-count').textContent = data.total || data.skills?.length || 0;
+                
+                if (data.skills && data.skills.length > 0) {
+                    renderSkills(data.skills);
+                } else {
+                    document.getElementById('skills-container').innerHTML = `
+                        <p style="color: white; text-align: center; grid-column: 1/-1; font-size: 1.2rem;">
+                            暂无技能数据
+                        </p>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showError('加载技能失败：' + error.message);
+            }
+        }
+
+        // 渲染技能卡片
+        function renderSkills(skills) {
+            const container = document.getElementById('skills-container');
+            container.innerHTML = skills.map(skill => `
+                <div class="skill-card">
+                    <div class="skill-header">
+                        <span class="skill-name">${escapeHtml(skill.name)}</span>
+                        <span class="skill-version">v${skill.version}</span>
+                    </div>
+                    <div class="skill-description">${escapeHtml(skill.description)}</div>
+                    <div class="skill-meta">
+                        <span class="skill-author">👤 ${escapeHtml(skill.author || 'Unknown')}</span>
+                        <span class="skill-status ${skill.status === 'active' ? 'status-active' : 'status-inactive'}">
+                            ${skill.status === 'active' ? '● 运行中' : '○ 已停止'}
+                        </span>
+                    </div>
+                    <button class="run-btn" onclick="runSkill('${skill.id}')">
+                        ▶️ 运行技能
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // 运行技能
+        function runSkill(skillId) {
+            alert(`准备运行技能：${skillId}\n(功能开发中...)`);
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('error-container').innerHTML = `
+                <div class="error-msg">
+                    <strong>❌ 错误:</strong> ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 初始化
+        async function init() {
+            const apiOk = await checkAPI();
+            const wsOk = await checkWebSocket();
+            
+            if (apiOk) {
+                await loadSkills();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
